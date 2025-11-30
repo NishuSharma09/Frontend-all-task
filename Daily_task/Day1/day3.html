@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Magic Box - Day 3</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        justify-content: center;
+        align-items: center;
+        gap: 30px;
+        font-family: sans-serif;
+        background-color: #f4f4f4;
+      }
+
+      /* Base Style for Box */
+      #box {
+        width: 200px; /* Default width */
+        height: 200px; /* Default height */
+        background-color: teal;
+        border-radius: 10px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        
+        /* ✨ The Magic Line: Smooth Transition */
+        transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+      }
+
+      /* Class to Add via JS */
+      .big-box {
+        width: 400px !important; /* Force override */
+        height: 400px !important;
+        background-color: #ff4757 !important; /* Red color */
+        border-radius: 50%; /* Circle ban jayega! */
+        transform: rotate(180deg); /* Thoda ghuma bhi dete hain */
+      }
+
+      button {
+        padding: 12px 24px;
+        font-size: 1.2rem;
+        cursor: pointer;
+        background: #333;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        transition: 0.2s;
+      }
+
+      button:hover {
+        background: #555;
+      }
+    </style>
+  </head>
+  <body>
+    
+    <div id="box"></div>
+    
+    <button id="btn">Click to Expand</button>
+
+    <script>
+      // 1. Select Elements
+      const box = document.querySelector("#box");
+      const btn = document.querySelector("#btn");
+
+      // 2. Add Event Listener
+      btn.addEventListener("click", function () {
+        
+        // A. Toggle Class (Add/Remove automatically)
+        box.classList.toggle("big-box");
+
+        // B. Toggle Button Text (Bonus Logic)
+        if (box.classList.contains("big-box")) {
+            btn.textContent = "Click to Shrink";
+            btn.style.backgroundColor = "#ff4757"; // Match button color to box
+        } else {
+            btn.textContent = "Click to Expand";
+            btn.style.backgroundColor = "#333";
+        }
+      });
+    </script>
+  </body>
+</html>
