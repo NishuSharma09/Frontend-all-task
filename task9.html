@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Live Character Counter</title>
+  <style>
+    :root{
+      --limit: 100;
+      --green: #16a34a;
+      --orange: #f59e0b;
+      --red: #ef4444;
+      --muted: #6b7280;
+    }
+    *{box-sizing:border-box}
+    body{
+      font-family: Inter, system-ui, Arial, sans-serif;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:100vh;
+      margin:0;
+      background:#f8fafc;
+      padding:24px;
+    }
+    .card{
+      width:100%;
+      max-width:600px;
+      background:#fff;
+      border-radius:10px;
+      padding:18px;
+      box-shadow:0 8px 30px rgba(2,6,23,0.07);
+    }
+    label{display:block;font-weight:600;margin-bottom:8px}
+    textarea{
+      width:100%;
+      min-height:140px;
+      padding:12px;
+      border:1px solid #e6eef8;
+      border-radius:8px;
+      font-size:1rem;
+      resize:vertical;
+    }
+    .counter{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-top:10px;
+      gap:12px;
+      font-weight:600;
+      color:var(--muted);
+    }
+    .counter .left{font-size:0.95rem}
+    .pill{
+      padding:6px 10px;
+      border-radius:999px;
+      color:#fff;
+      font-weight:700;
+      min-width:88px;
+      text-align:center;
+    }
+    .pill.green{background:var(--green)}
+    .pill.orange{background:var(--orange)}
+    .pill.red{background:var(--red)}
+    .hint{margin-top:8px;color:var(--muted);font-size:0.9rem}
+  </style>
+</head>
+<body>
+  <div class="card" role="region" aria-label="Live character counter example">
+    <label for="message">Write your message</label>
+    <textarea id="message" inputmode="text" aria-describedby="counter" placeholder="Type here..."></textarea>
+
+    <div id="counter" class="counter" aria-live="polite">
+      <div class="left">Characters left: <span id="remaining">100</span></div>
+      <div id="statusPill" class="pill green">Good</div>
+    </div>
+
+    <div class="hint">Limit: <span id="limitDisplay">100</span> characters. Typing is blocked once limit is reached.</div>
+  </div>
+
+  <script>
+    (function(){
+      const LIMIT = 100;
+      const textarea = document.getElementById('message');
+      const remainingEl = document.getElementById('remaining');
+      const statusPill = document.getElementById('statusPill');
+      const limitDisplay = document.getElementById('limitDisplay');
+
+      limitDisplay.textContent = LIMIT;
+      remainingEl.textContent = LIMIT;
+
+      function updateUI(){
+        let val = textarea.value;
+        if(val.length > LIMIT){
+          textarea.value = val.slice(0, LIMIT);
+          val = textarea.value;
+        }
+        const remaining = LIMIT - val.length;
+        remainingEl.textContent = remaining;
+
+        const pct = (remaining / LIMIT) * 100;
+
+        statusPill.classList.remove('green','orange','red');
+        if(pct > 50){
+          statusPill.classList.add('green');
+          statusPill.textContent = 'Good';
+        } else if(pct > 20){
+          statusPill.classList.add('orange');
+          statusPill.textContent = 'Almost';
+        } else {
+          statusPill.classList.add('red');
+          statusPill.textContent = 'Limit';
+        }
+      }
+
+      textarea.addEventListener('input', updateUI);
+
+      textarea.addEventListener('keydown', (e) => {
+        const val = textarea.value;
+        const allowedKeys = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Tab'];
+        if(val.length >= LIMIT && !allowedKeys.includes(e.key) && !(e.ctrlKey || e.metaKey)){
+          // Prevent adding more printable characters when at limit
+          // Allow shortcuts (Ctrl/Cmd) and navigation keys
+          e.preventDefault();
+        }
+      });
+
+      textarea.addEventListener('paste', (e) => {
+        const paste = (e.clipboardData || window.clipboardData).getData('text');
+        const spaceLeft = LIMIT - textarea.value.length;
+        if(paste.length > spaceLeft){
+          e.preventDefault();
+          const toInsert = paste.slice(0, spaceLeft);
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const before = textarea.value.slice(0, start);
+          const after = textarea.value.slice(end);
+          textarea.value = before + toInsert + after;
+          // move caret to after inserted text
+          const pos = start + toInsert.length;
+          textarea.setSelectionRange(pos, pos);
+          updateUI();
+        }
+      });
+
+      updateUI();
+    })();
+  </script>
+</body>
+</html>
