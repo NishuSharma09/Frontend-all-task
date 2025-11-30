@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Profile Card Studio</title>
+  <style>
+    :root{
+      --card-width:420px;
+      --accent:#ff6600;
+      --muted:#6b6b6b;
+      --radius:10px;
+    }
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,Arial;margin:24px;background:#f5f7fb;color:#111}
+    .wrap{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+    .card{
+      width:var(--card-width);
+      padding:18px;
+      border-radius:var(--radius);
+      background:linear-gradient(180deg,#fff,#fbfbff);
+      box-shadow:0 8px 30px rgba(17,24,39,0.08);
+      transition:background-color .25s, transform .15s;
+    }
+    .card.theme{ background: #fff }
+    .avatar{width:100%;display:flex;justify-content:center;margin-bottom:12px}
+    .avatar img{width:140px;height:140px;border-radius:50%;object-fit:cover;border:6px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,0.08)}
+    h1.name{font-size:1.35rem;margin:6px 0}
+    h2.role{font-size:0.95rem;color:var(--muted);margin:4px 0 12px}
+    p.bio{font-size:0.95rem;line-height:1.45;color:#222}
+    .skills{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
+    .chip{background:#f1f5f9;padding:6px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:8px;font-size:0.9rem}
+    .chip .rm{cursor:pointer;font-weight:600;border:0;background:transparent}
+    .chip.enter-anim{animation:pop .28s ease}
+    @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+    .details{margin-top:14px;padding:10px;border-radius:8px;background:#fafafa}
+    .hidden{display:none !important}
+    .error{border:2px solid #ff4d4f; padding:6px;border-radius:6px}
+    .controls{min-width:320px;max-width:560px;flex:1}
+    .panel{background:#fff;padding:16px;border-radius:10px;box-shadow:0 6px 18px rgba(17,24,39,0.06)}
+    .row{display:flex;gap:8px;margin-bottom:10px}
+    label{font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px}
+    input[type="text"], textarea{width:100%;padding:10px;border:1px solid #eee;border-radius:6px;font-size:0.95rem}
+    textarea{min-height:80px;resize:vertical}
+    .btn{background:var(--accent);color:#fff;padding:9px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:600}
+    .btn.ghost{background:transparent;color:var(--accent);border:1px solid #ffd7c4}
+    .theme-row{display:flex;gap:10px;margin-top:10px}
+    .theme-btn{width:36px;height:36px;border-radius:8px;border:2px solid #fff;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,0.06)}
+    .theme-btn.active{outline:3px solid rgba(0,0,0,0.06);transform:scale(1.06)}
+    .footer-hint{color:var(--muted);font-size:0.85rem;margin-top:10px}
+    @media (max-width:900px){.wrap{flex-direction:column;align-items:stretch}.card{width:100%}}
+  </style>
+</head>
+<body>
+  <h1>Profile Card Studio</h1>
+  <div class="wrap">
+
+    <section id="profileCard" class="card" aria-label="Profile preview">
+      <div class="avatar">
+        <img id="profileImg" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&q=80&auto=format&fit=crop" alt="User avatar">
+      </div>
+
+      <div id="nameElWrap">
+        <h1 id="nameEl" class="name" title="Double-click to edit">Alex Morgan</h1>
+      </div>
+
+      <h2 id="roleEl" class="role" title="Double-click to edit">Frontend Engineer</h2>
+      <p id="bioEl" class="bio" title="Double-click to edit">Designer turned developer. Loves building clean interfaces & delightful micro-interactions.</p>
+
+      <div>
+        <strong>Skills</strong>
+        <div id="skillsContainer" class="skills" aria-live="polite"></div>
+      </div>
+
+      <div id="detailsBlock" class="details">
+        <p><strong>Email:</strong> alex@example.com</p>
+        <p><strong>Location:</strong> Remote / Worldwide</p>
+      </div>
+    </section>
+
+    <aside class="controls">
+      <div class="panel">
+        <div>
+          <label for="nameInput">Name</label>
+          <input id="nameInput" type="text" placeholder="Enter name...">
+        </div>
+
+        <div style="margin-top:10px">
+          <label for="roleInput">Role</label>
+          <input id="roleInput" type="text" placeholder="Enter role...">
+        </div>
+
+        <div style="margin-top:10px">
+          <label for="bioInput">Bio</label>
+          <textarea id="bioInput" placeholder="Write a short bio..."></textarea>
+        </div>
+
+        <div style="margin-top:10px">
+          <label for="imgInput">Avatar image URL</label>
+          <input id="imgInput" type="text" placeholder="Paste image URL and press Set">
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="imgSetBtn" class="btn">Set Image</button>
+            <button id="imgClearBtn" class="btn ghost">Remove Image</button>
+          </div>
+          <div id="imgError" style="color:#ff4d4f;margin-top:6px;display:none;font-size:0.9rem"></div>
+        </div>
+
+        <hr style="margin:14px 0">
+
+        <div>
+          <label for="skillInput">Add skill</label>
+          <div style="display:flex;gap:8px">
+            <input id="skillInput" type="text" placeholder="e.g. React">
+            <button id="addSkillBtn" class="btn">Add</button>
+            <button id="removeLastSkill" class="btn ghost">Remove last</button>
+          </div>
+          <div class="footer-hint">Tip: Press Enter in the skill input to add quickly.</div>
+        </div>
+
+        <hr style="margin:14px 0">
+
+        <div>
+          <label>Theme</label>
+          <div class="theme-row" id="themeRow">
+            <button class="theme-btn" data-color="#ffffff" style="background:#fff"></button>
+            <button class="theme-btn" data-color="#fdf3e7" style="background:#fdf3e7"></button>
+            <button class="theme-btn" data-color="#f0fbff" style="background:#f0fbff"></button>
+            <button class="theme-btn" data-color="#e8fff1" style="background:#e8fff1"></button>
+            <button class="theme-btn" data-color="#fff0f6" style="background:#fff0f6"></button>
+          </div>
+        </div>
+
+        <hr style="margin:14px 0">
+
+        <div style="display:flex;gap:8px;align-items:center">
+          <button id="toggleDetails" class="btn">Hide Details</button>
+          <button id="clearAllSkills" class="btn ghost">Clear skills</button>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button id="saveBtn" class="btn">Save to localStorage</button>
+          <button id="resetBtn" class="btn ghost">Reset</button>
+        </div>
+
+        <div style="margin-top:12px;color:var(--muted);font-size:0.9rem">
+          <strong>Developer Tips</strong>
+          <ul style="margin:8px 0 0 18px;color:var(--muted)">
+            <li>Double-click name/role/bio to edit directly (contentEditable)</li>
+            <li>Use devtools to inspect selectors and event delegation</li>
+          </ul>
+        </div>
+
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const profileCard = document.getElementById('profileCard');
+    const nameEl = document.getElementById('nameEl');
+    const roleEl = document.getElementById('roleEl');
+    const bioEl = document.getElementById('bioEl');
+    const profileImg = document.getElementById('profileImg');
+
+    const chipsLiveCollection = document.getElementsByClassName('chip');
+    const allButtons = document.getElementsByTagName('button');
+
+    const nameInput = document.querySelector('#nameInput');
+    const roleInput = document.querySelector('#roleInput');
+    const bioInput = document.querySelector('#bioInput');
+
+    const themeButtons = document.querySelectorAll('.theme-btn');
+    const skillsContainer = document.querySelector('#skillsContainer');
+
+    const skillInput = document.getElementById('skillInput');
+    const addSkillBtn = document.getElementById('addSkillBtn');
+    const removeLastSkill = document.getElementById('removeLastSkill');
+    const clearAllSkillsBtn = document.getElementById('clearAllSkills');
+    const toggleDetailsBtn = document.getElementById('toggleDetails');
+    const detailsBlock = document.getElementById('detailsBlock');
+    const imgInput = document.getElementById('imgInput');
+    const imgSetBtn = document.getElementById('imgSetBtn');
+    const imgClearBtn = document.getElementById('imgClearBtn');
+    const imgError = document.getElementById('imgError');
+    const saveBtn = document.getElementById('saveBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const STORAGE_KEY = 'profileStudio:v1';
+
+    function loadFromStorage(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return;
+        const state = JSON.parse(raw);
+        if(state.name) { nameEl.textContent = state.name; nameInput.value = state.name; }
+        if(state.role) { roleEl.textContent = state.role; roleInput.value = state.role; }
+        if(state.bio)  { bioEl.innerText = state.bio; bioInput.value = state.bio; }
+        if(state.imgSrc) { profileImg.src = state.imgSrc; imgInput.value = state.imgSrc; }
+        if(state.imgAlt) profileImg.alt = state.imgAlt || '';
+        if(Array.isArray(state.skills)) {
+          skillsContainer.innerHTML = '';
+          state.skills.forEach(s => appendSkillChip(s));
+        }
+        if(state.theme){
+          applyTheme(state.theme);
+          themeButtons.forEach(b => b.classList.toggle('active', b.dataset.color === state.theme));
+        }
+        if(state.detailsHidden){
+          detailsBlock.classList.add('hidden');
+          toggleDetailsBtn.textContent = 'Show Details';
+          toggleDetailsBtn.dataset.hidden = 'true';
+          imgSetBtn.disabled = true;
+          imgClearBtn.disabled = true;
+        }
+      }catch(e){
+        console.error('Failed to load state', e);
+      }
+    }
+
+    function saveToStorage(){
+      const state = {
+        name: nameEl.textContent.trim(),
+        role: roleEl.textContent.trim(),
+        bio: bioEl.innerText.trim(),
+        imgSrc: profileImg.getAttribute('src') || null,
+        imgAlt: profileImg.getAttribute('alt') || '',
+        skills: Array.from(document.querySelectorAll('.chip .text')).map(n => n.textContent),
+        theme: profileCard.style.backgroundColor || null,
+        detailsHidden: detailsBlock.classList.contains('hidden')
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      alert('Saved to localStorage ✅');
+    }
+
+    function logChildInfo(){
+      Array.from(profileCard.children).forEach(child => {
+        console.log(child.nodeName, child.classList ? child.classList.value : '');
+      });
+    }
+
+    nameInput.addEventListener('input', e => {
+      nameEl.textContent = e.target.value || '—';
+      validateName();
+    });
+
+    roleInput.addEventListener('input', e => {
+      roleEl.textContent = e.target.value || '—';
+    });
+
+    bioInput.addEventListener('input', e => {
+      bioEl.innerText = e.target.value || '';
+    });
+
+    [nameEl, roleEl, bioEl].forEach(el => {
+      el.addEventListener('dblclick', () => {
+        el.contentEditable = 'true';
+        el.focus();
+        el.style.outline = '2px dashed rgba(0,0,0,0.08)';
+      });
+      el.addEventListener('blur', () => {
+        el.contentEditable = 'false';
+        el.style.outline = '';
+        if(el === nameEl) nameInput.value = nameEl.textContent.trim();
+        if(el === roleEl) roleInput.value = roleEl.textContent.trim();
+        if(el === bioEl) bioInput.value = bioEl.innerText.trim();
+        saveToStorageDebounced();
+      });
+    });
+
+    imgSetBtn.addEventListener('click', () => {
+      const url = imgInput.value.trim();
+      if(!url){
+        profileImg.removeAttribute('src');
+        imgError.style.display = 'none';
+        saveToStorageDebounced();
+        return;
+      }
+      profileImg.src = url;
+      profileImg.setAttribute('alt','Profile avatar');
+      imgError.style.display = 'none';
+    });
+
+    imgClearBtn.addEventListener('click', () => {
+      profileImg.removeAttribute('src');
+      imgInput.value = '';
+      imgError.style.display = 'none';
+      saveToStorageDebounced();
+    });
+
+    profileImg.addEventListener('error', () => {
+      imgError.style.display = 'block';
+      imgError.textContent = 'Image failed to load — placeholder shown.';
+      profileImg.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="100%" height="100%" fill="%23e9ecef"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%236b6b6b" font-size="20">No image</text></svg>';
+    });
+    profileImg.addEventListener('load', () => {
+      imgError.style.display = 'none';
+      saveToStorageDebounced();
+    });
+
+    themeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const color = btn.dataset.color;
+        applyTheme(color);
+        themeButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        saveToStorageDebounced();
+      });
+    });
+
+    function applyTheme(color){
+      profileCard.style.backgroundColor = color;
+      profileCard.style.transform = 'translateY(-2px)';
+      setTimeout(()=>profileCard.style.transform = '',150);
+    }
+
+    function appendSkillChip(text){
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.innerHTML = `<span class="text">${escapeHtml(text)}</span><button class="rm" aria-label="remove skill">×</button>`;
+      skillsContainer.appendChild(chip);
+      chip.classList.add('enter-anim');
+      setTimeout(()=>chip.classList.remove('enter-anim'),350);
+      saveToStorageDebounced();
+    }
+
+    addSkillBtn.addEventListener('click', addSkillFromInput);
+    skillInput.addEventListener('keydown', e => {
+      if(e.key === 'Enter') { e.preventDefault(); addSkillFromInput(); }
+      if(e.key === 'Escape'){ skillInput.value = ''; }
+    });
+
+    function addSkillFromInput(){
+      const v = skillInput.value.trim();
+      if(!v) { skillInput.classList.add('error'); setTimeout(()=>skillInput.classList.remove('error'),700); return; }
+      appendSkillChip(v);
+      skillInput.value = '';
+    }
+
+    skillsContainer.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('.rm');
+      if(!btn) return;
+      const chip = btn.closest('.chip');
+      if(chip) chip.remove();
+      saveToStorageDebounced();
+      console.log('skills count:', document.querySelectorAll('.chip').length);
+    });
+
+    removeLastSkill.addEventListener('click', () => {
+      const last = skillsContainer.lastElementChild;
+      if(last) last.remove();
+      saveToStorageDebounced();
+    });
+
+    clearAllSkillsBtn.addEventListener('click', () => {
+      skillsContainer.innerHTML = '';
+      saveToStorageDebounced();
+    });
+
+    toggleDetailsBtn.addEventListener('click', () => {
+      detailsBlock.classList.toggle('hidden');
+      const hiddenNow = detailsBlock.classList.contains('hidden');
+      toggleDetailsBtn.textContent = hiddenNow ? 'Show Details' : 'Hide Details';
+      imgSetBtn.disabled = hiddenNow;
+      imgClearBtn.disabled = hiddenNow;
+      saveToStorageDebounced();
+    });
+
+    function validateName(){
+      if(!nameEl.textContent.trim()){
+        nameEl.classList.add('error');
+      } else {
+        nameEl.classList.remove('error');
+      }
+    }
+
+    saveBtn.addEventListener('click', saveToStorage);
+
+    resetBtn.addEventListener('click', () => {
+      if(!confirm('Reset preview and clear saved profile?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    });
+
+    let saveTimeout = null;
+    function saveToStorageDebounced(){
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(()=>{ try{ saveToStorage() }catch(e){console.error(e)} }, 600);
+    }
+
+    function escapeHtml(s){
+      return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    console.log('All button count (getElementsByTagName):', allButtons.length);
+
+    function ensureDefault(){
+      if(document.querySelectorAll('.chip').length === 0){
+        ['HTML','CSS','JavaScript'].forEach(s => appendSkillChip(s));
+      }
+    }
+
+    loadFromStorage();
+    ensureDefault();
+    validateName();
+
+    window.debugLogChildren = logChildInfo;
+    window.profileCard = profileCard;
+  </script>
+</body>
+</html>
