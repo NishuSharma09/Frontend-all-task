@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chessboard — Day 2</title>
+  <style>
+    :root{
+      --board-size: 480px; /* overall board dimension */
+      --cells: 8;          /* number of rows/columns */
+      --cell-size: calc(var(--board-size) / var(--cells));
+      --light: #f0d9b5;
+      --dark:  #b58863;
+      --border: #333;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#f3f4f6;
+      font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      padding:24px;
+    }
+
+    .board-wrap{display:flex;flex-direction:column;gap:12px;align-items:center}
+    .chessboard{
+      width:var(--board-size);
+      height:var(--board-size);
+      display:grid;
+      grid-template-columns:repeat(var(--cells), 1fr);
+      grid-template-rows:repeat(var(--cells), 1fr);
+      border:4px solid var(--border);
+      box-shadow:0 10px 30px rgba(17,24,39,0.12);
+    }
+
+    .square{
+      width:100%;
+      height:100%;
+      user-select:none;
+    }
+
+    .square.light{ background: var(--light); }
+    .square.dark { background: var(--dark);  }
+
+    /* responsive: shrink board on small screens */
+    @media (max-width:520px){
+      :root{ --board-size: 320px; }
+    }
+
+    /* small helper to show coordinates (optional) */
+    .coords{
+      display:flex;
+      width:var(--board-size);
+      justify-content:space-between;
+      font-size:0.9rem;
+      color:#444;
+      user-select:none;
+    }
+  </style>
+</head>
+<body>
+  <div class="board-wrap" aria-label="Chessboard container">
+    <div class="coords" aria-hidden="true">
+      <span>a b c d e f g h</span>
+      <span>8×8</span>
+    </div>
+
+    <div class="chessboard" id="chess"></div>
+
+    <div class="coords" aria-hidden="true">
+      <span>drag/drop / pieces: not included</span>
+      <span>©</span>
+    </div>
+  </div>
+
+  <script>
+    (function createChessboard(rows = 8, cols = 8){
+      const board = document.getElementById('chess');
+      board.innerHTML = ''; // reset if called again
+
+      for(let r = 0; r < rows; r++){
+        for(let c = 0; c < cols; c++){
+          const sq = document.createElement('div');
+          sq.className = 'square ' + (((r + c) % 2 === 0) ? 'light' : 'dark');
+          // optional: data attributes for row/col (0-indexed)
+          sq.dataset.row = r;
+          sq.dataset.col = c;
+          board.appendChild(sq);
+        }
+      }
+    })(8,8);
+  </script>
+</body>
+</html>
