@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Interactive Product Filter</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Roboto,Arial;background:#f8fafc;margin:28px}
+  .wrap{max-width:900px;margin:0 auto;background:#fff;padding:18px;border-radius:10px;box-shadow:0 8px 30px rgba(2,6,23,0.06)}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .btn{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;background:#e6eef8;font-weight:700}
+  .active{background:#2563eb;color:#fff}
+  #search{padding:8px 10px;border-radius:8px;border:1px solid #e6eef8;flex:1}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+  .card{padding:12px;border-radius:8px;border:1px solid #eef2ff;background:#fbfdff}
+  .cat{font-size:0.85rem;color:#6b7280;margin-top:6px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>Products</h2>
+    <div class="controls">
+      <button class="btn filter-btn active" data-cat="all">All</button>
+      <button class="btn filter-btn" data-cat="electronics">Electronics</button>
+      <button class="btn filter-btn" data-cat="clothing">Clothing</button>
+      <input id="search" placeholder="Search products..." />
+    </div>
+    <div id="list" class="grid"></div>
+  </div>
+
+<script>
+  const products = [
+    {id:1,name:'Wireless Headphones',category:'electronics'},
+    {id:2,name:'Smartphone XL',category:'electronics'},
+    {id:3,name:'Cotton T-Shirt',category:'clothing'},
+    {id:4,name:'Bluetooth Speaker',category:'electronics'},
+    {id:5,name:'Leather Jacket',category:'clothing'},
+    {id:6,name:'Laptop Pro',category:'electronics'},
+    {id:7,name:'Sneakers',category:'clothing'},
+    {id:8,name:'E-book Reader',category:'electronics'},
+    {id:9,name:'Denim Jeans',category:'clothing'},
+    {id:10,name:'Smartwatch',category:'electronics'},
+    {id:11,name:'Formal Shirt',category:'clothing'}
+  ]
+
+  const listEl = document.getElementById('list')
+  const filterBtns = Array.from(document.querySelectorAll('.filter-btn'))
+  const searchInput = document.getElementById('search')
+  let activeCat = 'all'
+  let searchTerm = ''
+
+  function render(items){
+    listEl.innerHTML = ''
+    if(items.length === 0){ listEl.innerHTML = '<div style="grid-column:1/-1;color:#6b7280;padding:12px">No products found</div>'; return }
+    items.forEach(p=>{
+      const node = document.createElement('div')
+      node.className = 'card'
+      node.innerHTML = `<div style="font-weight:700">${p.name}</div><div class="cat">${p.category}</div>`
+      listEl.appendChild(node)
+    })
+  }
+
+  function filterAndRender(){
+    const term = searchTerm.trim().toLowerCase()
+    let out = products.filter(p=>{
+      const catOk = activeCat === 'all' ? true : p.category === activeCat
+      const searchOk = term === '' ? true : p.name.toLowerCase().includes(term)
+      return catOk && searchOk
+    })
+    render(out)
+  }
+
+  filterBtns.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      filterBtns.forEach(b=>b.classList.remove('active'))
+      btn.classList.add('active')
+      activeCat = btn.dataset.cat
+      filterAndRender()
+    })
+  })
+
+  function debounce(fn, delay=250){
+    let t
+    return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), delay) }
+  }
+
+  searchInput.addEventListener('input', debounce((e)=>{
+    searchTerm = e.target.value
+    filterAndRender()
+  },200))
+
+  filterAndRender()
+</script>
+</body>
+</html>
