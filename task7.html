@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Image Gallery Loader</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Roboto,Arial;background:#f8fafc;margin:28px}
+  .wrap{max-width:1100px;margin:0 auto;background:#fff;padding:18px;border-radius:10px;box-shadow:0 8px 30px rgba(2,6,23,0.06)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:12px}
+  .item{overflow:hidden;border-radius:8px;border:1px solid #eef2ff;background:#fff;min-height:140px;display:flex;align-items:center;justify-content:center}
+  .item img{width:100%;height:100%;object-fit:cover;opacity:0;transform:translateY(6px);transition:opacity .45s ease,transform .45s ease}
+  .item.show img{opacity:1;transform:none}
+  .btn{padding:8px 12px;border-radius:8px;border:0;background:#2563eb;color:#fff;cursor:pointer}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>Image Gallery</h2>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="loadMore" class="btn">Load More</button>
+    </div>
+    <div id="grid" class="grid"></div>
+  </div>
+
+<script>
+  const grid = document.getElementById('grid')
+  const loadMore = document.getElementById('loadMore')
+  let page = 1
+
+  async function fetchImages(page=1,limit=9){
+    try{
+      const res = await fetch(`https://picsum.photos/v2/list?page=${page}&limit=${limit}`)
+      if(!res.ok) throw new Error('network')
+      return await res.json()
+    }catch(e){
+      return []
+    }
+  }
+
+  async function load(){
+    loadMore.disabled = true
+    const imgs = await fetchImages(page,9)
+    imgs.forEach(i=>{
+      const div = document.createElement('div'); div.className = 'item'
+      const img = document.createElement('img'); img.src = `https://picsum.photos/id/${i.id}/600/400`; img.alt = i.author
+      div.appendChild(img); grid.appendChild(div)
+      img.addEventListener('load', ()=>{ div.classList.add('show') })
+    })
+    page++
+    loadMore.disabled = false
+  }
+
+  loadMore.addEventListener('click', load)
+  load()
+</script>
+</body>
+</html>
