@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Image Carousel — Task 3</title>
+  <style>
+    :root{
+      --w:720px;
+      --h:420px;
+      --gap:12px;
+    }
+    *{box-sizing:border-box}
+    body{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin:0;
+      background:#f4f6f8;
+      padding:24px;
+    }
+
+    .carousel {
+      width:100%;
+      max-width:var(--w);
+      background:#fff;
+      border-radius:12px;
+      box-shadow:0 12px 40px rgba(2,6,23,0.08);
+      overflow:hidden;
+      position:relative;
+      user-select:none;
+    }
+
+    .viewport{
+      width:100%;
+      height:var(--h);
+      position:relative;
+      overflow:hidden;
+      background:#000;
+    }
+
+    .slide{
+      position:absolute;
+      inset:0;
+      opacity:0;
+      transition:opacity .5s ease, transform .5s ease;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .slide img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .slide.active{
+      opacity:1;
+      transform:translateZ(0);
+      z-index:2;
+    }
+
+    .controls{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      pointer-events:none;
+    }
+
+    .btn{
+      pointer-events:auto;
+      background:rgba(255,255,255,0.9);
+      border:0;
+      padding:10px 14px;
+      margin:16px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:700;
+      box-shadow:0 6px 18px rgba(2,6,23,0.08);
+    }
+
+    .nav{
+      display:flex;
+      gap:8px;
+      padding:12px;
+      justify-content:center;
+      align-items:center;
+    }
+
+    .dot{
+      width:12px;height:12px;border-radius:999px;background:#d1d5db;cursor:pointer;border:2px solid rgba(255,255,255,0.6);
+    }
+
+    .dot.active{background:#2563eb}
+
+    .meta {
+      display:flex;
+      justify-content:space-between;
+      padding:12px 16px;
+      align-items:center;
+      gap:12px;
+    }
+
+    .caption{font-weight:600;color:#111}
+    .small{color:#6b7280;font-size:0.9rem}
+
+    @media (max-width:720px){
+      :root{--w:100%;--h:56vw}
+      .btn{padding:8px 10px;margin:8px}
+    }
+  </style>
+</head>
+<body>
+  <div class="carousel" id="carousel" aria-roledescription="carousel">
+    <div class="viewport" id="viewport" tabindex="0" aria-live="polite">
+      <!-- slides injected by script -->
+    </div>
+
+    <div class="controls" aria-hidden="true">
+      <button class="btn" id="prevBtn" aria-label="Previous image">◀ Prev</button>
+      <button class="btn" id="nextBtn" aria-label="Next image">Next ▶</button>
+    </div>
+
+    <div class="meta">
+      <div class="caption" id="caption">Caption</div>
+      <div class="nav" id="dots" role="tablist" aria-label="Slide indicators"></div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const IMAGES = [
+        { src: 'https://images.unsplash.com/photo-1508898578281-774ac4893a62?q=80&w=1400&auto=format&fit=crop', alt:'Sunset mountains', caption:'Sunset mountains' },
+        { src: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1400&auto=format&fit=crop', alt:'Forest path', caption:'Forest path' },
+        { src: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1400&auto=format&fit=crop', alt:'City skyline', caption:'City skyline' },
+        { src: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=1400&auto=format&fit=crop', alt:'Beach waves', caption:'Beach waves' },
+        { src: 'https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=1400&auto=format&fit=crop', alt:'Desert road', caption:'Desert road' }
+      ];
+
+      const intervalMs = 3000;
+      let index = 0;
+      let timer = null;
+      let isHovering = false;
+
+      const viewport = document.getElementById('viewport');
+      const dotsWrap = document.getElementById('dots');
+      const caption = document.getElementById('caption');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const carouselEl = document.getElementById('carousel');
+
+      function buildSlides(){
+        IMAGES.forEach((imgObj,i) => {
+          const slide = document.createElement('div');
+          slide.className = 'slide';
+          slide.dataset.index = i;
+          const img = document.createElement('img');
+          img.src = imgObj.src;
+          img.alt = imgObj.alt || ('Slide ' + (i+1));
+          slide.appendChild(img);
+          viewport.appendChild(slide);
+
+          const dot = document.createElement('button');
+          dot.className = 'dot';
+          dot.dataset.index = i;
+          dot.setAttribute('role','tab');
+          dot.setAttribute('aria-label', `Go to slide ${i+1}`);
+          dotsWrap.appendChild(dot);
+          dot.addEventListener('click', () => { goTo(i); resetTimer(); });
+        });
+      }
+
+      function updateUI(){
+        const slides = viewport.querySelectorAll('.slide');
+        slides.forEach(s => s.classList.remove('active'));
+        const active = slides[index];
+        if(active) active.classList.add('active');
+
+        const dots = dotsWrap.querySelectorAll('.dot');
+        dots.forEach(d => d.classList.remove('active'));
+        const activeDot = dots[index];
+        if(activeDot) activeDot.classList.add('active');
+
+        caption.textContent = IMAGES[index].caption || (`Image ${index+1} of ${IMAGES.length}`);
+      }
+
+      function next(){
+        index = (index + 1) % IMAGES.length;
+        updateUI();
+      }
+
+      function prev(){
+        index = (index - 1 + IMAGES.length) % IMAGES.length;
+        updateUI();
+      }
+
+      function goTo(i){
+        index = (i + IMAGES.length) % IMAGES.length;
+        updateUI();
+      }
+
+      function startTimer(){
+        stopTimer();
+        timer = setInterval(() => {
+          if(!isHovering) next();
+        }, intervalMs);
+      }
+
+      function stopTimer(){
+        if(timer) { clearInterval(timer); timer = null; }
+      }
+
+      function resetTimer(){
+        startTimer();
+      }
+
+      // pause on hover
+      carouselEl.addEventListener('mouseenter', () => { isHovering = true; });
+      carouselEl.addEventListener('mouseleave', () => { isHovering = false; });
+
+      // also pause on focus inside viewport (keyboard users)
+      viewport.addEventListener('focusin', () => { isHovering = true; });
+      viewport.addEventListener('focusout', () => { isHovering = false; });
+
+      // buttons
+      nextBtn.addEventListener('click', () => { next(); resetTimer(); });
+      prevBtn.addEventListener('click', () => { prev(); resetTimer(); });
+
+      // keyboard support
+      document.addEventListener('keydown', (e) => {
+        if(e.key === 'ArrowRight') { next(); resetTimer(); }
+        if(e.key === 'ArrowLeft') { prev(); resetTimer(); }
+      });
+
+      // basic touch swipe support
+      let startX = null;
+      viewport.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, {passive:true});
+      viewport.addEventListener('touchend', (e) => {
+        if(startX === null) return;
+        const endX = (e.changedTouches && e.changedTouches[0].clientX) || 0;
+        const diff = startX - endX;
+        if(Math.abs(diff) > 40){
+          if(diff > 0) next(); else prev();
+          resetTimer();
+        }
+        startX = null;
+      });
+
+      buildSlides();
+      updateUI();
+      startTimer();
+
+      // Preload images (best-effort)
+      IMAGES.forEach(i => { const im = new Image(); im.src = i.src; });
+    })();
+  </script>
+</body>
+</html>
