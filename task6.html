@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Sequential Steps</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Roboto,Arial;background:#f8fafc;margin:28px}
+  .wrap{max-width:600px;margin:0 auto;background:#fff;padding:18px;border-radius:10px;box-shadow:0 8px 30px rgba(2,6,23,0.06)}
+  ul{padding-left:18px}
+  li{padding:8px;border-radius:6px;margin-bottom:8px;background:#fbfdff;border:1px solid #eef2ff}
+  .current{font-weight:800;background:#fffbeb;border-color:#f59e0b}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>Sequential Promise Steps</h2>
+    <button id="start" style="padding:8px 12px;border-radius:8px;border:0;background:#2563eb;color:#fff">Start</button>
+    <ul id="out"></ul>
+  </div>
+
+<script>
+  const start = document.getElementById('start')
+  const out = document.getElementById('out')
+
+  function step(text,ms=1000){
+    return new Promise(resolve=>setTimeout(()=>resolve(text),ms))
+  }
+
+  async function run(){
+    out.innerHTML = ''
+    const steps = [step('Step 1 done',1000),step('Step 2 done',1000),step('Step 3 done',1000)]
+    for(let i=0;i<steps.length;i++){
+      const li = document.createElement('li'); li.textContent = 'Running...'; out.appendChild(li)
+      li.classList.add('current')
+      const res = await steps[i]
+      li.textContent = res
+      li.classList.remove('current')
+    }
+  }
+
+  start.addEventListener('click', run)
+</script>
+</body>
+</html>
