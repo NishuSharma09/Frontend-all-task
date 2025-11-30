@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dynamic To-Do List</title>
+  <style>
+    :root {
+      --accent: #2563eb;
+      --danger: #ef4444;
+      --muted: #6b7280;
+      --radius: 8px;
+    }
+    *{box-sizing:border-box}
+    body{
+      font-family: Inter, system-ui, Arial, sans-serif;
+      display:flex;
+      justify-content:center;
+      padding:40px;
+      background:#f8fafc;
+      color:#0f172a;
+    }
+
+    .app {
+      width:100%;
+      max-width:600px;
+      background:#fff;
+      border-radius:12px;
+      padding:20px;
+      box-shadow:0 10px 30px rgba(2,6,23,0.08);
+    }
+
+    h1{margin:0 0 14px;font-size:1.25rem}
+    form.add-form{display:flex;gap:8px;margin-bottom:16px}
+    input[type="text"]{
+      flex:1;padding:10px;border:1px solid #e6eef8;border-radius:8px;font-size:1rem;
+    }
+    button{padding:10px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:600}
+    .btn-add{background:var(--accent);color:white}
+    .btn-cancel{background:#f1f5f9;color:var(--muted)}
+    ul#taskList{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+    li.task{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px;
+      border-radius:8px;
+      background:#fbfdff;
+      border:1px solid #eef2ff;
+    }
+    .task .text{flex:1;margin-right:12px}
+    .task .text.done{text-decoration:line-through;color:var(--muted)}
+    .controls{display:flex;gap:8px;align-items:center}
+    .controls button{font-size:0.9rem;padding:6px 8px;border-radius:6px}
+    .btn-edit{background:#f59e0b;color:white}
+    .btn-delete{background:var(--danger);color:white}
+    .small{font-size:0.85rem;color:var(--muted);margin-top:10px}
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+  <main class="app" aria-label="To Do App">
+    <h1>Dynamic To-Do List</h1>
+
+    <form id="addForm" class="add-form" aria-label="Add task form">
+      <input id="taskInput" type="text" autocomplete="off" placeholder="Enter a task..." aria-label="Task text">
+      <button type="submit" class="btn-add">Add Task</button>
+    </form>
+
+    <ul id="taskList" aria-live="polite" aria-label="Tasks"></ul>
+
+    <div class="small">
+      Tip: Press <strong>Enter</strong> to add. Tasks are saved locally in your browser.
+    </div>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'todo:tasks:v1';
+
+    const addForm = document.getElementById('addForm');
+    const taskInput = document.getElementById('taskInput');
+    const taskList = document.getElementById('taskList');
+
+    // In-memory tasks array (keeps shape { id: string, text: string })
+    let tasks = [];
+
+    // Utils
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+    const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    const load = () => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        tasks = raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        tasks = [];
+      }
+    };
+
+    // Render whole list from tasks array
+    function renderTasks(){
+      taskList.innerHTML = '';
+      tasks.forEach(t => taskList.appendChild(createTaskNode(t)));
+    }
+
+    // Create a DOM node for a task object
+    function createTaskNode(task){
+      const li = document.createElement('li');
+      li.className = 'task';
+      li.dataset.id = task.id;
+
+      const span = document.createElement('span');
+      span.className = 'text';
+      span.textContent = task.text;
+      span.setAttribute('title','Double-click to edit');
+
+      // Controls wrapper
+      const controls = document.createElement('div');
+      controls.className = 'controls';
+
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'btn-edit';
+      editBtn.textContent = 'Edit';
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'btn-delete';
+      deleteBtn.textContent = 'Delete';
+
+      controls.appendChild(editBtn);
+      controls.appendChild(deleteBtn);
+
+      li.appendChild(span);
+      li.appendChild(controls);
+
+      // Edit behavior: swap text -> input, change Edit -> Save and add Cancel
+      editBtn.addEventListener('click', () => {
+        // If already in edit mode (button label 'Save'), finalize edit
+        if(editBtn.textContent === 'Save'){
+          const input = li.querySelector('input.edit-input');
+          const newText = input.value.trim();
+          if(!newText){
+            input.classList.add('error');
+            setTimeout(()=>input.classList.remove('error'),600);
+            return;
+          }
+          span.textContent = newText;
+          // update tasks array and persist
+          const idx = tasks.findIndex(x => x.id === task.id);
+          if(idx > -1) tasks[idx].text = newText;
+          save();
+          // restore UI
+          input.replaceWith(span);
+          editBtn.textContent = 'Edit';
+          const cancelBtn = li.querySelector('.btn-cancel');
+          if(cancelBtn) cancelBtn.remove();
+        } else {
+          // Enter edit mode
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'edit-input';
+          input.value = span.textContent;
+          input.style.flex = '1';
+          // Replace span with input and add a Cancel button
+          span.replaceWith(input);
+          editBtn.textContent = 'Save';
+          const cancelBtn = document.createElement('button');
+          cancelBtn.type = 'button';
+          cancelBtn.className = 'btn-cancel';
+          cancelBtn.textContent = 'Cancel';
+          cancelBtn.addEventListener('click', () => {
+            input.replaceWith(span);
+            editBtn.textContent = 'Edit';
+            cancelBtn.remove();
+          });
+          controls.insertBefore(cancelBtn, deleteBtn);
+          input.focus();
+          input.select();
+
+          // support Enter to save, Esc to cancel
+          input.addEventListener('keydown', (ev) => {
+            if(ev.key === 'Enter') editBtn.click();
+            if(ev.key === 'Escape') cancelBtn.click();
+          });
+        }
+      });
+
+      // Delete behavior
+      deleteBtn.addEventListener('click', () => {
+        if(!confirm('Delete this task?')) return;
+        // remove from array
+        tasks = tasks.filter(x => x.id !== task.id);
+        save();
+        li.remove();
+      });
+
+      // Double-click text to trigger edit quickly
+      span.addEventListener('dblclick', () => editBtn.click());
+
+      return li;
+    }
+
+    // Add Task (from form)
+    addForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = taskInput.value.trim();
+      if(!text){
+        taskInput.classList.add('error');
+        setTimeout(()=>taskInput.classList.remove('error'),600);
+        return;
+      }
+      const newTask = { id: uid(), text };
+      tasks.push(newTask);
+      save();
+      taskList.appendChild(createTaskNode(newTask));
+      taskInput.value = '';
+      taskInput.focus();
+    });
+
+    // Initialise
+    (function init(){
+      load();
+      renderTasks();
+    })();
+  </script>
+</body>
+</html>
