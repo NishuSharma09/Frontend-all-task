@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Random Joke Generator</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Roboto,Arial;background:#f8fafc;margin:28px}
+  .wrap{max-width:640px;margin:0 auto;background:#fff;padding:18px;border-radius:10px;box-shadow:0 8px 30px rgba(2,6,23,0.06)}
+  .btn{padding:8px 12px;border-radius:8px;border:0;background:#2563eb;color:#fff;cursor:pointer}
+  .joke{padding:16px;border-radius:8px;background:#fbfdff;border:1px solid #eef2ff;margin-top:12px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>Random Joke</h2>
+    <div style="display:flex;gap:8px">
+      <button id="next" class="btn">Next Joke</button>
+      <div id="status" style="align-self:center;color:#6b7280"></div>
+    </div>
+    <div id="joke" class="joke"></div>
+  </div>
+
+<script>
+  const nextBtn = document.getElementById('next')
+  const jokeEl = document.getElementById('joke')
+  const status = document.getElementById('status')
+
+  function fetchJoke(){
+    nextBtn.disabled = true
+    status.textContent = 'Loading...'
+    fetch('https://official-joke-api.appspot.com/random_joke')
+      .then(res=>{
+        if(!res.ok) throw new Error('Network')
+        return res.json()
+      })
+      .then(data=>{
+        jokeEl.innerHTML = `<div style="font-weight:700">${data.setup}</div><div style="margin-top:8px">${data.punchline}</div>`
+      })
+      .catch(()=>{
+        jokeEl.innerHTML = '<div style="color:#ef4444">Failed to fetch joke</div>'
+      })
+      .finally(()=>{
+        nextBtn.disabled = false
+        status.textContent = ''
+      })
+  }
+
+  nextBtn.addEventListener('click', fetchJoke)
+  fetchJoke()
+</script>
+</body>
+</html>
